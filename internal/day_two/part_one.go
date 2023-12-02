@@ -1,47 +1,114 @@
 package day_two
 
-import (
-	"regexp"
-	"strconv"
-	"strings"
-)
-
 //go:noinline
 func partOne(input []byte) int {
-	var total int
-	var limit map[string]int
-	var valid bool
+	var red, green, blue, total, game int
+	valid := true
 
-	lines := strings.Split(string(input), "\n")
+	for i := 0; i < len(input); i++ {
+		// G
+		if input[i] == 71 {
 
-	for _, line := range lines {
-		limit = map[string]int{
-			"red":   12,
-			"green": 13,
-			"blue":  14,
-		}
+			// Reset game state
+			valid = true
+			red = 0
+			green = 0
+			blue = 0
 
-		valid = true
+			// We know it's Game, so we can skip ahead to find ':'
+			for input[i] != 58 {
+				i++
+			}
 
-		game, _ := strconv.Atoi(line[5:strings.Index(line, ":")])
-		sets := strings.Split(line[strings.Index(line, ":")+2:], ";")
+			i--
 
-		for _, set := range sets {
-			drawsRe := regexp.MustCompile("(([0-9]+) (blue|green|red))")
-			draws := drawsRe.FindAllStringSubmatch(set, -1)
-			for _, draw := range draws {
-				num, _ := strconv.Atoi(draw[2])
-				col := draw[3]
+			// Now reverse to build the game number
+			if input[i] >= 48 && input[i] <= 57 {
+				game += int(input[i]) - 48
+			}
 
-				if limit[col]-num < 0 {
-					valid = false
-				}
+			if input[i-1] >= 48 && input[i-1] <= 57 {
+				game += (int(input[i-1])<<3 + int(input[i-1])<<1) - 480
+			}
+
+			if input[i-2] >= 48 && input[i-2] <= 57 {
+				game += (int(input[i-2])<<6 + int(input[i-2])<<5 + int(input[i-2])<<2) - 4800
 			}
 		}
 
-		if valid {
-			total += game
+		// r
+		if input[i] == 32 && input[i+1] == 114 {
+			i--
+
+			// Now reverse to build the red number
+			if input[i] >= 48 && input[i] <= 57 {
+				red += int(input[i]) - 48
+			}
+
+			if input[i-1] >= 48 && input[i-1] <= 57 {
+				red += (int(input[i-1])<<3 + int(input[i-1])<<1) - 480
+			}
+
+			i += 4
 		}
+
+		// g
+		if input[i] == 32 && input[i+1] == 103 {
+			i--
+
+			// Now reverse to build the green number
+			if input[i] >= 48 && input[i] <= 57 {
+				green += int(input[i]) - 48
+			}
+
+			if input[i-1] >= 48 && input[i-1] <= 57 {
+				green += (int(input[i-1])<<3 + int(input[i-1])<<1) - 480
+			}
+
+			i += 6
+		}
+
+		// b
+		if input[i] == 32 && input[i+1] == 98 {
+			i--
+
+			// Now reverse to build the blue number
+			if input[i] >= 48 && input[i] <= 57 {
+				blue += int(input[i]) - 48
+			}
+
+			if input[i-1] >= 48 && input[i-1] <= 57 {
+				blue += (int(input[i-1])<<3 + int(input[i-1])<<1) - 480
+			}
+
+			i += 5
+		}
+
+		// Semicolon / Newline
+		if input[i] == 59 || input[i] == 10 {
+			if red > 12 || green > 13 || blue > 14 {
+				valid = false
+			}
+			red = 0
+			green = 0
+			blue = 0
+		}
+
+		if input[i] == 10 {
+			if valid {
+				total += game
+			}
+
+			game = 0
+		}
+	}
+
+	if red > 12 || green > 13 || blue > 14 {
+		valid = false
+	}
+
+	if valid {
+		total += game
 	}
 
 	return total
